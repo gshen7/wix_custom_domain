@@ -2,6 +2,7 @@ const MY_DOMAIN = '';
 const BASE_WIXSITE = '';
 const WIX_PAGE_TITLE = 'Step Up Virtual';
 const WIX_PAGE_DESCRIPTION = 'Virtual summer camp';
+const ICON_LINK = 'https://img.icons8.com/material/4ac144/256/user-male.png'
 const ID_TO_ANCHOR = {
     "a tag id": "anchor/id to scroll to", 
 };
@@ -94,6 +95,35 @@ class WixMetaRewriter {
     }
 }
 
+class WixHeadRewriter {
+    element(element) {
+        element.append(`
+      <script>
+        let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+        let head = document.querySelector('head');
+        let headObserver = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if ('${ICON_LINK}' != '') {
+                    var link = document.querySelector("link[rel*='shortcut icon']") || document.createElement('link');
+                    link.type = 'image/x-icon';
+                    link.rel = 'shortcut icon';
+                    link.href = '${ICON_LINK}';
+                    
+                    link = document.querySelector("link[rel*='apple-touch-icon']") || document.createElement('link');
+                    link.type = 'image/x-icon';
+                    link.rel = 'apple-touch-icon';
+                    link.href = '${ICON_LINK}';
+                }
+            });
+        });
+        headObserver.observe(head, { subtree: true, childList: true });  
+        </script>
+        `, {
+            html: true
+        });
+    }
+}
+
 class WixBodyRewriter {
     constructor(ID_TO_ANCHOR, DISABLE_IDS, HIDE_IDS) {
         this.ID_TO_ANCHOR = ID_TO_ANCHOR;
@@ -116,9 +146,9 @@ class WixBodyRewriter {
             eles && eles.forEach(ele => ele.style.top = "0px")
         }
 
-        let MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+        let BodyMutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
         let body = document.querySelector('body');
-        let observer = new MutationObserver(function (mutations) {
+        let bodyObserver = BodyMutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {
                 for (var i = 0; i < HIDE_IDS.length; i++) {
                     hideElement("#"+HIDE_IDS[i])
@@ -128,7 +158,7 @@ class WixBodyRewriter {
 
                 var anchors = document.getElementsByTagName("a");
                 for (var i = 0; i < anchors.length; i++) {
-                    anchors[i].href = anchors[i].href.replace("https://${BASE_WIXSITE}.wixsite.com/",'https://${MY_DOMAIN}/')
+                    anchors[i].href = anchors[i].href.replace("https://${BASE_WIXSITE}.wixsite.com",'https://${MY_DOMAIN}')
                     if(Object.keys(ID_TO_ANCHOR).includes(anchors[i].id)){
                         let anchor = ID_TO_ANCHOR[anchors[i].id]
                         let base = anchors[i].href.indexOf("#") > -1 ? anchors[i].href.substring(0,anchors[i].href.indexOf("#")) : anchors[i].href
@@ -141,7 +171,7 @@ class WixBodyRewriter {
                 }
             });
         });
-        observer.observe(body, { subtree: true, childList: true });  
+        bodyObserver.observe(body, { subtree: true, childList: true });  
         </script>
         `, {
             html: true
